@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+
+  nginx:
+    container_name: nginx
+    build:
+      context: requirements/nginx/
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - inception
+    volumes:
+      - wordpress:/var/www/wordpress
+    ports:
+      - "443:443"
+    depends_on:
+      - wordpress
+    extra_hosts:
+      - "artmarti.42.fr:127.0.0.1"
+
+  mariadb:
+    container_name: mariadb
+    build:
+      context: requirements/mariadb
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - inception
+    volumes:
+      - mariadb:/var/lib/mysql
+    expose:
+      - "3306"
+    extra_hosts:
+      - "artmarti.42.fr:127.0.0.1"
+
+  wordpress:
+    container_name: wordpress
+    build:
+      context: requirements/wordpress
+    ports:
+      - "9000:9000"
+    restart: always
+    volumes:
+      - wordpress:/var/www/wordpress
+    networks:
+      - inception
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+    expose:
+      - "9000"
+    extra_hosts:
+      - "artmarti.42.fr:127.0.0.1"
+
+volumes:
+  wordpress:
+    name: wordpress
+    driver: local
+    driver_opts:
+      device: /home/artmarti/data/wordpress
+      type: 'none'
+      o: 'bind'
+  mariadb:
+    name: mariadb
+    driver: local
+    driver_opts:
+      device: /home/artmarti/data/mariadb
+      type: 'none'
+      o: 'bind'
+
+networks:
+  inception:
+    driver: bridge
